@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CRM | Login</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="auth-wrapper">
+    <div class="auth-card">
+      <h1>Welcome back</h1>
+      <p class="subtitle">Sign in to your CRM admin panel</p>
+
+      <form id="loginForm">
+        <label>
+          Email
+          <input type="email" name="email" required placeholder="admin@crm.local" />
+        </label>
+
+        <label>
+          Password
+          <input type="password" name="password" required placeholder="••••••••" />
+        </label>
+
+        <button type="submit" id="submitBtn">Sign in</button>
+        <p id="message" class="message"></p>
+      </form>
+
+      <p class="alt-link">
+        Don't have an account? <a href="/register.html">Create one</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('loginForm');
+    const msg = document.getElementById('message');
+    const btn = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msg.textContent = '';
+      msg.className = 'message';
+      btn.disabled = true;
+      btn.textContent = 'Signing in...';
+
+      const data = Object.fromEntries(new FormData(form));
+
+      try {
+        const res = await fetch('/api/v1/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        const json = await res.json();
+
+        if (!res.ok || !json.success) {
+          throw new Error(json.message || 'Login failed');
+        }
+
+        localStorage.setItem('token', json.data.token);
+        localStorage.setItem('user', JSON.stringify(json.data.user));
+        msg.textContent = 'Logged in. Redirecting...';
+        msg.classList.add('success');
+        setTimeout(() => (window.location.href = '/dashboard.html'), 600);
+      } catch (err) {
+        msg.textContent = err.message;
+        msg.classList.add('error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Sign in';
+      }
+    });
+  </script>
+</body>
+</html>

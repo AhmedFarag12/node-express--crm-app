@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CRM | Register Admin</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="auth-wrapper">
+    <div class="auth-card">
+      <h1>Create admin account</h1>
+      <p class="subtitle">Set up your CRM administrator</p>
+
+      <form id="registerForm">
+        <label>
+          Full name
+          <input type="text" name="name" required minlength="2" maxlength="80" placeholder="Ahmed Admin" />
+        </label>
+
+        <label>
+          Email
+          <input type="email" name="email" required placeholder="admin@crm.local" />
+        </label>
+
+        <label>
+          Phone
+          <input type="text" name="phone" placeholder="01000000000" />
+        </label>
+
+        <label>
+          Password
+          <input type="password" name="password" required minlength="6" placeholder="At least 6 characters" />
+        </label>
+
+        <input type="hidden" name="role" value="admin" />
+
+        <button type="submit" id="submitBtn">Create account</button>
+        <p id="message" class="message"></p>
+      </form>
+
+      <p class="alt-link">
+        Already have an account? <a href="/login.html">Sign in</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('registerForm');
+    const msg = document.getElementById('message');
+    const btn = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msg.textContent = '';
+      msg.className = 'message';
+      btn.disabled = true;
+      btn.textContent = 'Creating...';
+
+      const data = Object.fromEntries(new FormData(form));
+      if (!data.phone) delete data.phone;
+
+      try {
+        const res = await fetch('/api/v1/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        const json = await res.json();
+
+        if (!res.ok || !json.success) {
+          throw new Error(json.message || 'Registration failed');
+        }
+
+        if (json.data && json.data.token) {
+          localStorage.setItem('token', json.data.token);
+          localStorage.setItem('user', JSON.stringify(json.data.user));
+        }
+        msg.textContent = 'Account created. Redirecting...';
+        msg.classList.add('success');
+        setTimeout(() => (window.location.href = '/dashboard.html'), 600);
+      } catch (err) {
+        msg.textContent = err.message;
+        msg.classList.add('error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Create account';
+      }
+    });
+  </script>
+</body>
+</html>
