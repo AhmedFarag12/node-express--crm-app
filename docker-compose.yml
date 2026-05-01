@@ -15,9 +15,6 @@ services:
       - EMAIL_USER=youremail@gmail.com
       - EMAIL_PASS=your_app_password
       - EMAIL_FROM=CRM <no-reply@crm.local>
-      - CLOUDINARY_CLOUD_NAME=
-      - CLOUDINARY_API_KEY=
-      - CLOUDINARY_API_SECRET=
     depends_on:
       - mongo
     volumes:

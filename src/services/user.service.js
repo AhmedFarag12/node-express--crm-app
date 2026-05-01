@@ -2,6 +2,7 @@ const User = require('../models/User');
 const ApiError = require('../utils/ApiError');
 const { hashPassword } = require('../utils/password');
 const { buildPagination, paginatedResponse } = require('../utils/pagination');
+const { uploadAvatar, deleteAvatar } = require('../config/storage');
 
 const create = async (data) => {
   const exists = await User.findOne({ email: data.email });
@@ -50,7 +51,39 @@ const update = async (id, data) => {
 const remove = async (id) => {
   const user = await User.findByIdAndDelete(id);
   if (!user) throw ApiError.notFound('User not found');
+  if (user.avatar && user.avatar.publicId) {
+    await deleteAvatar(user.avatar.publicId);
+  }
   return user;
 };
 
-module.exports = { create, list, getById, update, remove };
+const setAvatar = async (id, file) => {
+  if (!file || !file.buffer) throw ApiError.badRequest('No image file provided');
+
+  const user = await User.findById(id);
+  if (!user) throw ApiError.notFound('User not found');
+
+  const stored = await uploadAvatar(file.buffer, file.mimetype);
+
+  if (user.avatar && user.avatar.publicId) {
+    await deleteAvatar(user.avatar.publicId);
+  }
+
+  user.avatar = stored;
+  await user.save();
+  return user;
+};
+
+const removeAvatar = async (id) => {
+  const user = await User.findById(id);
+  if (!user) throw ApiError.notFound('User not found');
+
+  if (user.avatar && user.avatar.publicId) {
+    await deleteAvatar(user.avatar.publicId);
+  }
+  user.avatar = undefined;
+  await user.save();
+  return user;
+};
+
+module.exports = { create, list, getById, update, remove, setAvatar, removeAvatar };

@@ -26,4 +26,14 @@ const remove = asyncHandler(async (req, res) => {
   res.json({ success: true, message: 'User deleted' });
 });
 
-module.exports = { create, list, getById, update, remove };
+const uploadAvatar = asyncHandler(async (req, res) => {
+  const user = await userService.setAvatar(req.params.id, req.file);
+  res.json({ success: true, data: user });
+});
+
+const removeAvatar = asyncHandler(async (req, res) => {
+  const user = await userService.removeAvatar(req.params.id);
+  res.json({ success: true, data: user });
+});
+
+module.exports = { create, list, getById, update, remove, uploadAvatar, removeAvatar };
